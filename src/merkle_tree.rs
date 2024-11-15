@@ -2,15 +2,12 @@ use sha3::{Digest, Sha3_256};
 
 pub type Hash = [u8; 32];
 
+#[derive(Default)]
 pub struct MerkleTree {
     layers: Vec<Vec<Hash>>,
 }
 
 impl MerkleTree {
-    fn default() -> Self {
-        Self { layers: Vec::new() }
-    }
-
     pub fn from_leaves<T: std::convert::AsRef<[u8]>>(leaves: &[T]) -> Self {
         let mut tree = Self::default();
         tree.build_first_layer(leaves);
