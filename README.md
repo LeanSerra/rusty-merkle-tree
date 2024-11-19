@@ -18,3 +18,25 @@ make run_release
 ```
 make test
 ```
+# Examples
+```Rust
+// Create an empty tree make it mut to add more elements
+
+let mut tree = MerkleTree::default();
+
+// Add elements to the tree
+tree.add_element(&"1");
+tree.add_element(&"2");
+tree.add_element(&"3");
+tree.add_element(&"4");
+
+// Generate a proof that an element exists and verify it
+
+if let Some((proof, idx)) = tree.generate_proof(&"1") {
+    assert!(tree.verify_proof(&"1", &proof, idx));
+}
+
+// Get the root of the tree
+
+let root = tree.get_root();
+```
