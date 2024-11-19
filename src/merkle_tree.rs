@@ -37,7 +37,7 @@ impl MerkleTree {
     }
 
     fn build_first_layer<T: std::convert::AsRef<[u8]>>(leaves: &[T]) -> Vec<Hash> {
-        let mut first_layer: Vec<[u8; 32]> = Vec::new();
+        let mut first_layer: Vec<Hash> = Vec::new();
         for leave in leaves {
             first_layer.push(Sha3_256::digest(leave).into());
         }
