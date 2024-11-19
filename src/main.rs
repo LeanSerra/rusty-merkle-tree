@@ -10,10 +10,18 @@ fn main() {
     println!("Tree without 4 and 5");
     println!("Before adding 4");
     println!("{tree}");
-    tree.add_element("4");
+    tree.add_element(&"4");
     println!("After adding 4 and before 5");
     println!("{tree}");
-    tree.add_element("5");
+    tree.add_element(&"5");
     println!("After adding 5");
     println!("{tree}");
+    if let Some((proof, idx)) = tree.generate_proof(&"1") {
+        match tree.verify_proof(&"1", &proof, idx) {
+            true => println!("1 is in the tree"),
+            false => println!("1 is not on the tree"),
+        }
+    } else {
+        println!("Not found 1");
+    };
 }

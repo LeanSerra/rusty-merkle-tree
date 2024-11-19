@@ -63,7 +63,7 @@ impl MerkleTree {
         next_layer
     }
 
-    pub fn add_element<T: std::convert::AsRef<[u8]>>(&mut self, elem: T) {
+    pub fn add_element<T: std::convert::AsRef<[u8]>>(&mut self, elem: &T) {
         let mut hasher = Sha3_256::new();
         let Some(last_layer) = self.layers.last_mut() else {
             return;
@@ -174,7 +174,7 @@ mod test {
         let leaves: Vec<String> = Vec::new();
         let mut tree = MerkleTree::from_leaves(&leaves);
         assert_eq!(None, tree.get_root());
-        tree.add_element("1");
+        tree.add_element(&"1");
         assert_eq!(
             Some([
                 103, 177, 118, 112, 91, 70, 32, 102, 20, 33, 159, 71, 160, 90, 238, 122, 230, 163,
@@ -182,7 +182,7 @@ mod test {
             ]),
             tree.get_root()
         );
-        tree.add_element("2");
+        tree.add_element(&"2");
         assert_eq!(
             Some([
                 129, 126, 89, 113, 153, 50, 84, 184, 160, 87, 205, 216, 126, 177, 231, 150, 152,
@@ -190,7 +190,7 @@ mod test {
             ]),
             tree.get_root()
         );
-        tree.add_element("3");
+        tree.add_element(&"3");
         assert_eq!(
             Some([
                 98, 188, 83, 184, 206, 109, 0, 66, 150, 238, 25, 116, 106, 0, 246, 132, 255, 226,
@@ -198,7 +198,7 @@ mod test {
             ]),
             tree.get_root()
         );
-        tree.add_element("4");
+        tree.add_element(&"4");
         assert_eq!(
             Some([
                 137, 153, 44, 123, 164, 130, 79, 195, 21, 135, 186, 74, 94, 220, 125, 98, 73, 20,
