@@ -125,12 +125,73 @@ impl MerkleTree {
         }
     }
 
-    #[cfg(test)]
     pub fn get_root(&self) -> Option<Hash> {
         match self.layers.first() {
             Some(root_layer) => root_layer.first().copied(),
             None => None,
         }
+    }
+
+    fn get_leaves(&self) -> Option<&Vec<Hash>> {
+        self.layers.last()
+    }
+
+    pub fn generate_proof<T: std::convert::AsRef<[u8]>>(
+        &self,
+        elem: &T,
+    ) -> Option<(Vec<Hash>, usize)> {
+        let leaf_idx = self.get_leaf_idx(Sha3_256::digest(elem).into())?;
+        let mut proof = Vec::new();
+        let mut idx = leaf_idx;
+        let height = self.layers.len();
+        for layer in self.layers[1..height].iter().rev() {
+            if idx % 2 == 0 {
+                // If the right element does not exist we duplicate the left one and add it to the proof
+                let right_child = match layer.get(idx + 1) {
+                    Some(right) => right,
+                    None => &layer[idx],
+                };
+                proof.push(*right_child);
+            } else {
+                proof.push(layer[idx - 1]);
+            }
+            idx /= 2;
+        }
+
+        Some((proof, leaf_idx))
+    }
+
+    pub fn verify_proof<T: std::convert::AsRef<[u8]>>(
+        &self,
+        elem: &T,
+        proof: &Vec<Hash>,
+        mut idx: usize,
+    ) -> bool {
+        let mut hasher = Sha3_256::new();
+        hasher.update(elem);
+        let mut hash: Hash = hasher.finalize_reset().into();
+        for part in proof {
+            if idx % 2 == 0 {
+                hasher.update(hash);
+                hasher.update(part);
+                hash = hasher.finalize_reset().into();
+            } else {
+                hasher.update(part);
+                hasher.update(hash);
+                hash = hasher.finalize_reset().into();
+            }
+            idx /= 2;
+        }
+
+        let Some(root) = self.get_root() else {
+            return false;
+        };
+        root == hash
+    }
+
+    fn get_leaf_idx(&self, target: Hash) -> Option<usize> {
+        let leaves = self.get_leaves()?;
+        leaves.iter().position(|e| *e == target)
     }
 }
 
@@ -206,5 +267,25 @@ mod test {
             ]),
             tree.get_root()
         );
+    }
+
+    #[test]
+    fn verify_generated_proof() {
+        let tree = MerkleTree::from_leaves(&["1", "2", "3"]);
+        let Some((proof, idx)) = tree.generate_proof(&"1") else {
+            panic!()
+        };
+        assert!(tree.verify_proof(&"1", &proof, idx))
+    }
+
+    #[test]
+    fn verify_proof_after_tree_modification() {
+        let mut tree = MerkleTree::from_leaves(&["1", "2", "3"]);
+        let Some((proof, idx)) = tree.generate_proof(&"1") else {
+            panic!()
+        };
+        assert!(tree.verify_proof(&"1", &proof, idx));
+        tree.add_element(&"4");
+        assert!(!tree.verify_proof(&"1", &proof, idx));
     }
 }
