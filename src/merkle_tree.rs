@@ -96,10 +96,9 @@ impl MerkleTree {
             if previous_layer.len() % 2 == 0 {
                 hasher.update(previous_layer[previous_layer_elem_count - 2]);
                 hasher.update(previous_layer[previous_layer_elem_count - 1]);
-                let Some(last_element) = current_layer.last_mut() else {
-                    panic!();
+                if let Some(last_element) = current_layer.last_mut() {
+                    *last_element = hasher.finalize_reset().into();
                 };
-                *last_element = hasher.finalize_reset().into();
             } else {
                 // Duplicate left node
                 hasher.update(previous_layer[previous_layer_elem_count - 1]);
@@ -115,16 +114,14 @@ impl MerkleTree {
             prev_idx -= 1;
         }
 
-        let Some(first_layer) = self.layers.first() else {
-            panic!()
+        if let Some(first_layer) = self.layers.first() {
+            // We need to create the last layer
+            if first_layer.len() != 1 {
+                hasher.update(first_layer[0]);
+                hasher.update(first_layer[1]);
+                self.layers.insert(0, vec![hasher.finalize().into()]);
+            }
         };
-
-        // We need to create the last layer
-        if first_layer.len() != 1 {
-            hasher.update(first_layer[0]);
-            hasher.update(first_layer[1]);
-            self.layers.insert(0, vec![hasher.finalize().into()]);
-        }
     }
 
     pub fn get_root(&self) -> Option<Hash> {
@@ -176,12 +173,11 @@ impl MerkleTree {
             if idx % 2 == 0 {
                 hasher.update(hash);
                 hasher.update(part);
-                hash = hasher.finalize_reset().into();
             } else {
                 hasher.update(part);
                 hasher.update(hash);
-                hash = hasher.finalize_reset().into();
             }
+            hash = hasher.finalize_reset().into();
             idx /= 2;
         }
 

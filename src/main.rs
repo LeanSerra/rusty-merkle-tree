@@ -17,9 +17,10 @@ fn main() {
     println!("After adding 5");
     println!("{tree}");
     if let Some((proof, idx)) = tree.generate_proof(&"1") {
-        match tree.verify_proof(&"1", &proof, idx) {
-            true => println!("1 is in the tree"),
-            false => println!("1 is not on the tree"),
+        if tree.verify_proof(&"1", &proof, idx) {
+            println!("1 is in the tree");
+        } else {
+            println!("1 is not on the tree");
         }
     } else {
         println!("Not found 1");
