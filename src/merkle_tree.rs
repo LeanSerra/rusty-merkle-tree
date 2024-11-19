@@ -65,8 +65,12 @@ impl MerkleTree {
 
     pub fn add_element<T: std::convert::AsRef<[u8]>>(&mut self, elem: &T) {
         let mut hasher = Sha3_256::new();
-        let Some(last_layer) = self.layers.last_mut() else {
-            return;
+        let last_layer = match self.layers.last_mut() {
+            Some(llayer) => llayer,
+            None => {
+                self.layers.push(vec![]);
+                &mut self.layers[0]
+            }
         };
         hasher.update(elem);
         last_layer.push(hasher.finalize_reset().into());
@@ -226,6 +230,20 @@ mod test {
         let leaves: Vec<String> = Vec::new();
         let tree = MerkleTree::from_leaves(&leaves);
         assert_eq!(None, tree.get_root())
+    }
+
+    #[test]
+    fn empty_tree_default() {
+        let mut tree = MerkleTree::default();
+        assert_eq!(None, tree.get_root());
+        tree.add_element(&"1");
+        assert_eq!(
+            Some([
+                103, 177, 118, 112, 91, 70, 32, 102, 20, 33, 159, 71, 160, 90, 238, 122, 230, 163,
+                237, 190, 133, 11, 187, 226, 20, 197, 54, 185, 137, 174, 164, 210
+            ]),
+            tree.get_root()
+        );
     }
 
     #[test]
