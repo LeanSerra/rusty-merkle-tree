@@ -10,31 +10,41 @@ pub struct MerkleTree {
 impl MerkleTree {
     pub fn from_leaves<T: std::convert::AsRef<[u8]>>(leaves: &[T]) -> Self {
         let mut tree = Self::default();
-        tree.build_first_layer(leaves);
+        tree.layers.push(Self::build_first_layer(leaves));
+        while let Some(previous_layer) = tree.layers.first() {
+            if previous_layer.len() == 1 {
+                break;
+            }
+            let next_layer = Self::build_next_layer(previous_layer);
+            tree.layers.insert(0, next_layer);
+        }
         tree
     }
 
-    fn build_first_layer<T: std::convert::AsRef<[u8]>>(&mut self, leaves: &[T]) {
-        let mut hasher = Sha3_256::new();
+    fn build_first_layer<T: std::convert::AsRef<[u8]>>(leaves: &[T]) -> Vec<Hash> {
         let mut first_layer: Vec<[u8; 32]> = Vec::new();
         for leave in leaves {
-            hasher.update(leave);
-            first_layer.push(hasher.finalize_reset().into());
+            first_layer.push(Sha3_256::digest(leave).into());
         }
-        self.layers.push(first_layer);
+        first_layer
     }
 
-    pub fn print_layers(self) {
-        for (i, layer) in self.layers.iter().enumerate() {
-            println!("Layer {i}: {{");
-            for hash in layer {
-                println!("{}", hex::encode(hash));
-            }
-            println!("}}");
+    fn build_next_layer(previous_layer: &[Hash]) -> Vec<Hash> {
+        let mut next_layer = Vec::new();
+        let next_layer_size = previous_layer.len().div_ceil(2);
+        let mut hasher = Sha3_256::new();
+        for i in 0..next_layer_size {
+            let Some(left_child) = previous_layer.get(i * 2) else {
+                todo!("Handle this error");
+            };
+            let right_child = match previous_layer.get(i * 2 + 1) {
+                Some(elem) => elem,
+                None => left_child,
+            };
+            hasher.update(left_child);
+            hasher.update(right_child);
+            next_layer.push(hasher.finalize_reset().into());
         }
-    }
-
-    fn build_tree(&mut self) {
-        todo!("Implement logic to build tree");
+        next_layer
     }
 }
