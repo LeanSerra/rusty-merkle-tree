@@ -71,11 +71,11 @@ impl MerkleTree {
         hasher.update(elem);
         last_layer.push(hasher.finalize_reset().into());
 
-        // The element is the first on the tree
+        // The element added was the first one on the tree
         if last_layer.len() == 1 {
             return;
         }
-        // We need to create the root layer
+        // The element added was the second one, we need to create the root layer
         if last_layer.len() == 2 {
             hasher.update(last_layer[0]);
             hasher.update(last_layer[1]);
@@ -91,18 +91,20 @@ impl MerkleTree {
             let current_layer = &mut self.layers[curr_idx];
             let previous_layer_elem_count = previous_layer.len();
 
-            if (previous_layer.len() - 1) % 2 == 0 {
-                // Duplicate left node
-                hasher.update(previous_layer[previous_layer_elem_count - 1]);
-                hasher.update(previous_layer[previous_layer_elem_count - 1]);
-                current_layer.push(hasher.finalize_reset().into());
-            } else {
+            // If after adding an element the previous layer has even amount of nodes we
+            // don't need to duplicate but if its odd we have to duplicate the left node
+            if previous_layer.len() % 2 == 0 {
                 hasher.update(previous_layer[previous_layer_elem_count - 2]);
                 hasher.update(previous_layer[previous_layer_elem_count - 1]);
                 let Some(last_element) = current_layer.last_mut() else {
                     panic!();
                 };
                 *last_element = hasher.finalize_reset().into();
+            } else {
+                // Duplicate left node
+                hasher.update(previous_layer[previous_layer_elem_count - 1]);
+                hasher.update(previous_layer[previous_layer_elem_count - 1]);
+                current_layer.push(hasher.finalize_reset().into());
             }
 
             if curr_idx > 0 {
