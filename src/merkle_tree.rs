@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use sha3::{Digest, Sha3_256};
 
 pub type Hash = [u8; 32];
@@ -5,6 +7,19 @@ pub type Hash = [u8; 32];
 #[derive(Default)]
 pub struct MerkleTree {
     layers: Vec<Vec<Hash>>,
+}
+
+impl Display for MerkleTree {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (idx, layer) in self.layers.iter().enumerate() {
+            writeln!(f, "Layer: {idx}: {{")?;
+            for hash in layer {
+                writeln!(f, "\t{}", hex::encode(hash))?;
+            }
+            writeln!(f, "}}")?;
+        }
+        Ok(())
+    }
 }
 
 impl MerkleTree {
