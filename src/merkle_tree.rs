@@ -27,7 +27,7 @@ impl MerkleTree {
         let mut tree = Self::default();
         tree.layers.push(Self::build_first_layer(leaves));
         while let Some(previous_layer) = tree.layers.first() {
-            if previous_layer.len() == 1 {
+            if previous_layer.len() <= 1 {
                 break;
             }
             let next_layer = Self::build_next_layer(previous_layer);
