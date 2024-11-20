@@ -49,9 +49,7 @@ impl MerkleTree {
         let next_layer_size = previous_layer.len().div_ceil(2);
         let mut hasher = Sha3_256::new();
         for i in 0..next_layer_size {
-            let Some(left_child) = previous_layer.get(i * 2) else {
-                todo!("Handle this error");
-            };
+            let left_child = &previous_layer[i * 2];
             let right_child = match previous_layer.get(i * 2 + 1) {
                 Some(elem) => elem,
                 None => left_child,
